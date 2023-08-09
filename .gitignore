@@ -138,3 +138,4 @@ dataset/
 *.dylib
 # *.th
 *.pickle
+.DS_Store
