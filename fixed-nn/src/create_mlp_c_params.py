@@ -118,12 +118,16 @@ if __name__ == '__main__':
             name = f'layer_{layer_idx}_s_w_inv'
             name2 = f'layer_{layer_idx}_s_x_inv'
             fxp_value = (((state_dict[name] * (2**16)).round() * (state_dict[name2] * (2**16)).round()) / (2**16)).round()
-            # fxp_value = (state_dict[name] * (2**16)).round()
-            f.write(f"const int {name}[{len(fxp_value)}] = {{")
             ret[name] = []
 
             for idx in range(len(fxp_value)):
                 ret[name].append(int(fxp_value[idx]))
+
+            name = f'layer_{layer_idx}_s_w_inv'
+            fxp_value = (state_dict[name] * (2**16)).round()
+            f.write(f"const int {name}[{len(fxp_value)}] = {{")
+
+            for idx in range(len(fxp_value)):
                 f.write(f"{int(fxp_value[idx])}")
                 if idx < len(fxp_value) - 1:
                      f.write(", ")
