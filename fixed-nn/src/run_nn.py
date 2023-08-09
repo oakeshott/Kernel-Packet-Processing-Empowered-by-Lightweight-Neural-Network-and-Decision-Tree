@@ -1,0 +1,103 @@
+
+"""
+Module interfacing between the C files and python
+"""
+import ctypes
+import ctypes.util
+import os
+import sys
+import time
+
+import numpy as np
+
+
+def load_c_lib(library):
+    """
+    Load C shared library
+    :param library: 
+    :return:
+    """
+    try:
+        c_lib = ctypes.CDLL(f"{os.path.dirname(os.path.abspath(__file__))}/{library}")
+    except OSError:
+        print("Unable to load the requested C library")
+        sys.exit()
+    return c_lib
+
+def ensure_contiguous(array):
+    """
+    Ensure that array is contiguous
+    :param array:
+    :return:
+    """
+    return np.ascontiguousarray(array) if not array.flags['C_CONTIGUOUS'] else array
+
+
+def run_mlp(x, c_lib):
+    """
+    Call 'run_mlp' function from C in Python
+    :param x:
+    :param c_lib:
+    :return:
+    """
+    N = len(x)
+    # print(x, N)
+    x = x.flatten()
+    x = ensure_contiguous(x.numpy())
+    x = x.astype(np.int64)
+    # x = x.astype(np.intc)
+    # print(x)
+    class_indices = ensure_contiguous(np.zeros(N, dtype=np.uintc))
+
+    c_int_p = ctypes.POINTER(ctypes.c_longlong)
+    # c_int_p = ctypes.POINTER(ctypes.c_int)
+    c_uint_p = ctypes.POINTER(ctypes.c_uint)
+
+    c_run_mlp = c_lib.run_mlp
+    c_run_mlp.argtypes = (c_int_p, ctypes.c_uint, c_uint_p)
+    c_run_mlp.restype = None
+    _x = x.ctypes.data_as(c_int_p)
+    _N = ctypes.c_uint(N)
+    _class_indices = class_indices.ctypes.data_as(c_uint_p)
+    start = time.perf_counter()
+    c_run_mlp(_x, _N, _class_indices)
+    end = time.perf_counter()
+    pred = np.ctypeslib.as_array(class_indices, N)
+    # c_run_mlp(x.ctypes.data_as(c_int_p), ctypes.c_uint(N), 
+    #           class_indices.ctypes.data_as(c_uint_p)
+    #                   )
+    elapsed = end - start
+    return pred, elapsed
+
+
+def run_convnet(x, c_lib):
+    """
+    Call 'run_mlp' function from C in Python
+    :param x:
+    :param c_lib:
+    :return:
+    """
+    N = len(x)
+    x = x.flatten()
+    x = ensure_contiguous(x.numpy())
+    x = x.astype(np.int64)
+    # print(x)
+    class_indices = ensure_contiguous(np.zeros(N, dtype=np.uintc))
+
+    c_int_p = ctypes.POINTER(ctypes.c_int)
+    c_uint_p = ctypes.POINTER(ctypes.c_uint)
+
+    c_run_convnet = c_lib.run_convnet
+    c_run_convnet.argtypes = (c_int_p, ctypes.c_uint, c_uint_p)
+    c_run_convnet.restype = None
+    _x = x.ctypes.data_as(c_int_p)
+    _N = ctypes.c_uint(N)
+    _class_indices = class_indices.ctypes.data_as(c_uint_p)
+    start = time.perf_counter()
+    c_run_convnet(_x, _N, _class_indices)
+    end = time.perf_counter()
+    pred = np.ctypeslib.as_array(class_indices, N)
+    elapsed = end - start
+
+    return pred, elapsed
+
