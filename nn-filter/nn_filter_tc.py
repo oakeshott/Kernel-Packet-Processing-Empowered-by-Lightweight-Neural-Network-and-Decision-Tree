@@ -260,7 +260,7 @@ int nn_tc_drop_packet(struct __sk_buff *skb) {
       zero.dport = pkt_key.dport;
       zero.num_packets = 0;
       zero.last_packet_timestamp = ts;
-      sessions.lookup_or_try_init(&pkt_key, &zero);
+      sessions.update(&pkt_key, &zero);
       pkt_leaf = sessions.lookup(&pkt_key);
     }
     if (pkt_leaf != NULL) {
@@ -305,6 +305,8 @@ int nn_tc_drop_packet(struct __sk_buff *skb) {
       int64_t out, _data_scale;
       int rounded_value, tensor_int, tensor_frac, scale_factor_int, scale_factor_frac, s_w_inv, s_x, s_x_inv, out_value, accumulator;
       int8_t weight, x_q[INPUT_DIM];
+
+      sessions.update(&pkt_key, pkt_leaf);
 
       // NORMALIZATION
       for (k = 0; k < INPUT_DIM; k++) {
