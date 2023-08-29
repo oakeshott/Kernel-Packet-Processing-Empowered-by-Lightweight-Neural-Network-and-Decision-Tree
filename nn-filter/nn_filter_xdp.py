@@ -53,7 +53,8 @@ struct pkt_leaf_t {
   u64 features[6];
 };
 
-BPF_ARRAY(out_input, int64_t, 16);
+BPF_PERCPU_ARRAY(out_input, int64_t, 16);
+BPF_PERCPU_ARRAY(out_input2, int64_t, 16);
 BPF_ARRAY(layer_1_weight, int, LAYER_1_WEIGHT);
 BPF_ARRAY(layer_2_weight, int, LAYER_2_WEIGHT);
 BPF_ARRAY(layer_3_weight, int, LAYER_3_WEIGHT);
@@ -117,7 +118,7 @@ int nn1(struct xdp_md *ctx) {
       out = (out_value*out + ROUND_CONST) >> FXP_VALUE;
     }
     out = MAX(out, 0);
-    out_input.update(&_m, &out);
+    out_input2.update(&_m, &out);
   }
   jmp_table.call(ctx, 1);
   return XDP_DROP;
@@ -136,7 +137,7 @@ int nn2(struct xdp_md *ctx) {
   scale_factor_frac = s_x - (scale_factor_int << FXP_VALUE);
   for (m = 0; m < H2; m++) {
     _m = m;
-    out = *out_input.lookup_or_init(&_m, &_zero64);
+    out = *out_input2.lookup_or_init(&_m, &_zero64);
     tensor_int = (out + ROUND_CONST) >> FXP_VALUE;
     if (tensor_int > INT8_MAX_VALUE*s_x_inv) {
       x_q[m] = (int8_t)INT8_MAX_VALUE;
