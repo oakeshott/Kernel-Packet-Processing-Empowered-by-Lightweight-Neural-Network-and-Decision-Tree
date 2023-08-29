@@ -146,7 +146,7 @@ int dt_tc_drop_packet(struct __sk_buff *skb) {
       zero.daddr = pkt_key.daddr;
       zero.num_packets = 0;
       zero.last_packet_timestamp = ts;
-      sessions.lookup_or_try_init(&pkt_key, &zero);
+      sessions.update(&pkt_key, &zero);
       pkt_leaf = sessions.lookup(&pkt_key);
     }
     if (pkt_leaf != NULL) {

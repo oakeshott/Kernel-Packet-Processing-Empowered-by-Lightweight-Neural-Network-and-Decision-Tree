@@ -252,7 +252,7 @@ int nn_xdp_drop_packet(struct xdp_md *ctx) {
       zero.dport = pkt_key.dport;
       zero.num_packets = 0;
       zero.last_packet_timestamp = ts;
-      sessions.lookup_or_try_init(&pkt_key, &zero);
+      sessions.update(&pkt_key, &zero);
       pkt_leaf = sessions.lookup(&pkt_key);
     }
     if (pkt_leaf != NULL) {
