@@ -300,7 +300,7 @@ int nn_xdp_drop_packet(struct xdp_md *ctx) {
         unsigned int _k = k;
         out = *data_min.lookup_or_init(&_k, &_zero64);
         _data_scale = *data_scale.lookup_or_init(&_k, &_zero64);
-        x[k] = (x[k] - out) * _data_scale;
+        x[k] = ((x[k] - out) * _data_scale + ROUND_CONST) >> FXP_VALUk;
       }
 
       int rounded_value, tensor_int, tensor_frac, scale_factor_int, scale_factor_frac, accumulator, s_w_inv, s_x, s_x_inv, out_value;
